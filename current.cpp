@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <stdexcept>
 #include "current.h"
 
 using namespace std;
@@ -12,76 +13,23 @@ Base* Base::create_object()
 {
     return new AnyBaseInt();
 }
-
-AnyBaseInt::AnyBaseInt() : value("0"), base(10), alphabet("0"), Negative(false) {}
+std::string AnyBaseInt::ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+AnyBaseInt::AnyBaseInt() : value("0"), base(10), currentAlphabet("0"), Negative(false), value10(0){}
 AnyBaseInt::~AnyBaseInt() {}
 
-int AnyBaseInt::Input_base(int &base)
+
+void AnyBaseInt::setBase(const int newBase) //помимо записи основания, записывается и алфавит на основания количества символов
+{
+	base = newBase;
+	currentAlphabet = ALPHABET.substr(0, base);
+}
+
+int AnyBaseInt::Input_base()
 {
     cout << "\nenter base of system: ";
-    while (true)
-    {
-        cin >> base;
-        if (!cin || base < 2 || base > 36)
-        {
-            cout << "wrong input, try again\n";
-            cin.clear();
-            continue;
-        }
-        break;
-    }
+    while (!(cin >> base) || base < 2 || base > 36)
+        cout << "\nwrong input, try again\n";
     return base;
-}
-
-void AnyBaseInt::Convert_to_Uppercase(string &alphabet)
-{
-    for (char &c : alphabet)
-        c = toupper(c);
-}
-
-int AnyBaseInt::Check_symbols(char c)
-{
-    string allowed = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    return allowed.find(c) != string::npos;
-}
-
-void AnyBaseInt::Input_alphabet(int base, string &alphabet)
-{
-    alphabet.clear();
-    char c;
-
-    cout << "Enter alphabet (" << base << " symbols):\n";
-    for (int i = 0; i < base; i++)
-    {
-        do
-        {
-            cin >> c;
-            if (!Check_symbols(c))
-                cout << "wrong input, try again\n";
-        } while (!Check_symbols(c));
-
-        alphabet.push_back(c);
-    }
-}
-
-int AnyBaseInt::Unique_alphabet(string alphabet, int base)
-{
-	Convert_to_Uppercase(alphabet);
-
-    for (int i = 0; i < base; i++)
-        for (int j = i + 1; j < base; j++)
-            if (alphabet[i] == alphabet[j])
-                return 0;
-
-    return 1;
-}
-
-void AnyBaseInt::Fill_Alphabet(string &alphabet, int base)
-{
-    do
-    {
-        Input_alphabet(base, alphabet);
-    } while (!Unique_alphabet(alphabet, base));
 }
 
 int AnyBaseInt::Check_Input_Value(string buf, string alphabet)
@@ -99,93 +47,52 @@ void AnyBaseInt::Input_value(string &value, string alphabet)
     {
         cout << "enter value\n";
         cin >> buf;
-        if (!Check_Input_Value(buf, alphabet))
-        {
-            cout << "wrong input, try again (value)\n";
-            cin.clear();
-        }
     } while (!Check_Input_Value(buf, alphabet));
 
     value = buf;
 }
 
-bool AnyBaseInt::Input_negative(bool &Negative)
+string AnyBaseInt::Convert_to_Decimal(string &buf, int base, string alphabet, bool Negative)
 {
-    int buf;
-    do
-    {
-        cout << "is value negative?\n1. yes\n2. no\n";
-        cin >> buf;
-        if (!cin || (buf != 1 && buf != 2))
-        {
-            cout << "wrong input, try again\n";
-            cin.clear();
-            buf = 0;
-        }
-    } while (buf != 1 && buf != 2);
+    int result = 0;
+    
+    cout << "negative value - " << Negative;
+    
+    if (base == 10) return buf;
+    
+    if (Negative) buf.erase(0,1);
+    
+    for (char c : buf)
+        result = result * base + alphabet.find(c);
 
-    Negative = (buf == 1);
-    return Negative;
+    buf = to_string(Negative ? -result : result);
+    return buf;
 }
 
+bool AnyBaseInt::Input_Negative()
+{
+	int buf;
+	
+	cout << "\nIs value negative? 1. yes 0. no\n";
+	while (1)
+	{
+		cin >> buf;
+		if (buf == 0 || buf == 1) break;
+	}
+	
+	Negative = buf;
+}
 
 void AnyBaseInt::AddObjectValue()
 {
-    Input_base(base);
-    Fill_Alphabet(alphabet, base);
-    Input_value(value, alphabet);
-    Input_negative(Negative);
-}
-
-string AnyBaseInt::Convert_to_Decimal(string &buf, int base, string alphabet, bool Negative) //преобразование в десятичное число, если уже десятичное, то просто возвращается изначальная строка 
-{
-	if (Negative)
-	{
-		if (base == 10) return buf;
-		else
-		{
-			
-		}
-	}
-	else
-	{
-		if (base == 10) return buf;
-		else
-		{
-			int i, j, temp_value = 0;
-			j = buf.size()-1;
-		
-			for (i = 0; i < buf.size(); i++)
-			{
-				temp_value += alphabet.find(buf[i]) * pow(base, j);
-				j--;
-			}
-		
-			buf = to_string(temp_value);
-		
-			return buf;
-		}		
-	}	
-}
-
-string AnyBaseInt::Convert_to_Base(string &buf, int base, string alphabet) 
-{
-	int i, cur_remain, cur_number;
-	
-	cur_number = stoi(buf);
-	buf = "";
-	
-	while (cur_number/base >= base)
-	{
-		cur_remain = cur_number % base;
-		
-		buf = alphabet[cur_remain-1] + buf;
-		
-		cur_number = cur_number / base;
-	}
-	
-	cout << "number after convertation - \n" << buf;
-	return buf;
+    setBase(Input_base());
+    
+    Input_Negative();
+    Input_value(value, currentAlphabet);
+    
+    string buf = value;
+    
+    value10 = stoi(Convert_to_Decimal(buf, base, currentAlphabet, Negative));
 }
 
 string AnyBaseInt::Add_One(string &converted, int base, string alphabet)
@@ -205,22 +112,43 @@ string AnyBaseInt::Add_One(string &converted, int base, string alphabet)
     return converted;
 }
 
-string AnyBaseInt::ConvertToString(int number, int base, bool negative, string alphabet)
+string AnyBaseInt::Convert_to_Base(int buf, int base, string alphabet)
 {
-    string converted = to_string(abs(number));
-    converted = AnyBaseInt().Convert_to_Base(converted, base, alphabet);
+    int number = buf;
+	string res = "";
+
+    if (number == 0)
+        return string(1, alphabet[0]);
+
+    while (number > 0)
+    {
+        res = alphabet[number % base] + res;
+        number /= base;
+    }
+    
+    return res;
+}
+
+string AnyBaseInt::ConvertToString(int number, int base, bool negative, string currentAlphabet)
+{
+    int value = negative ? -number : number;   // берём модуль если отрицательное
+    string converted = Convert_to_Base(value, base, currentAlphabet);
 
     if (!negative)
+    {
         return converted;
+    }
+    else
+    {
+    	if (base == 10)
+        {
+            return "-" + converted;
+        }
+        
+        char signDigit = currentAlphabet[base - 1];
 
-    while (converted.size() % 4 != 0)
-        converted = alphabet[0] + converted;
-
-    for (char &c : converted)
-        c = alphabet[base - 1 - alphabet.find(c)];
-
-    Add_One(converted, base, alphabet);
-    return converted;
+        return string(1, signDigit) + converted;
+    }
 }
 
 int AnyBaseInt::ConvertToInt(string s, int base, bool negative, string alphabet)
@@ -247,69 +175,67 @@ int AnyBaseInt::ConvertToInt(string s, int base, bool negative, string alphabet)
     return negative ? -res : res;
 }
 
-Base* AnyBaseInt::Convertation()
+void AnyBaseInt::Print()
 {
-    string buf, alphabet_changed;
+    cout << "value - " << value
+         << "\n\t\t\t\t\t\t\t\tbase - " << base
+         << "\n\t\t\t\t\t\t\t\talphabet - " << currentAlphabet 
+		 << "\n\t\t\t\t\t\t\t\tnegative - " << Negative
+		 << "\n\t\t\t\t\t\t\t\tvalue 10 - " << value10 << "\n";
+}
+
+bool AnyBaseInt::operator<(AnyBaseInt &b) const
+{
+	return this->value10 < b.value10;
+}
+
+bool AnyBaseInt::operator>(AnyBaseInt &b) const
+{
+	return this->value10 > b.value10;
+}
+
+bool AnyBaseInt::operator == (AnyBaseInt &b) const
+{
+	return this->value10 == b.value10;
+}
+
+string AnyBaseInt::GetValue() const 
+{ 
+	return value; 
+}
+
+void AnyBaseInt::SetValue(const string& v) 
+{ 
+	value = v; 
+}
+
+void AnyBaseInt::Convertation()
+{
     int base_changed;
+    cout << "\nbase of a system converting to: ";
+    cin >> base_changed;
 
-    Base *p = Base::create_object();
-    p->AddObjectValue(); 
+    string alphabet_changed = ALPHABET.substr(0, base_changed);
 
-    cout << "base of a system converting to: ";
-    Input_base(base_changed);
-    cout << "alphabet of new system:\n";
-    Fill_Alphabet(alphabet_changed, base_changed);
-
-    buf = Convert_to_Decimal(this->value, this->base, this->alphabet, this->Negative);
-
-    buf = Convert_to_Base(buf, base_changed, alphabet_changed);
+    string original_value = value;
+    cout << "\nORIGINAL VALUE IS " << original_value;
+	
+    string buf = ConvertToString(value10, base_changed, Negative, alphabet_changed);
     
-    cout << "Converted value: " << buf << "\n";
+    cout << "\nRESULT is ";
+    if (base == 10) cout << value10;
+    	else cout << buf;
 
-    AnyBaseInt* new_obj = dynamic_cast<AnyBaseInt*>(p);
-    if (new_obj)
-    {
-        new_obj->value = buf;
-        new_obj->base = base_changed;
-        new_obj->alphabet = alphabet_changed;
-        new_obj->Negative = false; 
-    }
-
-    return p;
+    value = buf;              
+    base = base_changed;
+    currentAlphabet = alphabet_changed;
 }
 
 
 int AnyBaseInt::Compare_objects(AnyBaseInt p1, AnyBaseInt p2)
 {
-	int num1, num2;
-	
-	if (p1.Negative)
-	{
-		num1 = ConvertToInt(p1.value, p1.base, p1.Negative, p1.alphabet);
-	}
-	else 
-	{
-		num1 = stoi(Convert_to_Decimal(p1.value, p1.base, p1.alphabet, p1.Negative));
-	}
-	
-	if (p2.Negative)
-	{
-		num2 = ConvertToInt(p2.value, p2.base, p2.Negative, p2.alphabet);
-	}
-	else
-	{
-		num2 = stoi(Convert_to_Decimal(p2.value, p2.base, p2.alphabet, p2.Negative));
-	}
-	
-	if (num1 > num2) return 1;
-		else if (num1 < num2) return 2;
-			else return 3;
-}
-
-void AnyBaseInt::Print()
-{
-    cout << "value - " << value
-         << "\nbase - " << base
-         << "\nalphabet - " << alphabet << "\n";
+	if (p1 > p2) return 1;
+		else if (p1 < p2) return 2;
+			else return 3;	
 }
 

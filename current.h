@@ -7,6 +7,9 @@ using namespace std;
 
 class Base : public Item
 {
+	
+friend class AnyBaseInt;
+
 public:
     Base();
     virtual ~Base();
@@ -19,30 +22,31 @@ public:
 
 class AnyBaseInt : public Base
 {
+friend class Base;
+
 private:
 	string value;
     int base;
-    string alphabet;
+    string currentAlphabet;
     bool Negative;
+    int value10; //здесь хранятся числа в 10сс
+    static std::string ALPHABET;
     
 public:
     AnyBaseInt();
     ~AnyBaseInt();
+    
+    void setBase(const int base); //сеттер Base, внутри установка алфавита
 
-    int Input_base(int &base);
-    int CaseSensetivity();
-    void Convert_to_Uppercase(string &alphabet);
-    int Check_symbols(char c);
-    void Input_alphabet(int base, string &alphabet);
-    int Unique_alphabet(string alphabet, int base);
-    void Fill_Alphabet(string &alphabet, int base);
+	int Input_base();
+
     int Check_Input_Value(string buf, string alphabet);
     void Input_value(string &value, string alphabet);
     bool Input_negative(bool &Negative);
     void AddObjectValue();
 
     string Convert_to_Decimal(string &buf, int base, string alphabet, bool Negative = false);
-    string Convert_to_Base(string &buf, int base, string alphabet);
+	string Convert_to_Base(int buf, int base, string alphabet);
 
     void Print();
     
@@ -50,8 +54,18 @@ public:
 	int ConvertToInt(string s, int base, bool negative, string alphabet);
 	string Add_One(string &converted, int base, string alphabet);
 	
-	Base* Convertation();
+	void Convertation();
 	int Compare_objects(AnyBaseInt p1, AnyBaseInt p2);
+	
+    bool operator<(AnyBaseInt &b) const;
+	bool operator>(AnyBaseInt &b) const;
+	bool operator == (AnyBaseInt &b) const;
+	
+	bool Input_Negative();
+	
+	string GetValue() const;
+	void SetValue(const std::string& v);
+	
 };
 
 #endif

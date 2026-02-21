@@ -28,11 +28,11 @@ void DebugList::printList()
     int i;
     Item* p;
 
-    cout << "\t#\tp\tp->Prev()\tp->Next()\tValues\n";
+    cout << "\t#\tp\t\tp->Prev()\tp->Next()\tValues\n";
     for (p = Head(), i = 0; p; p = p->Next(), i++)
     {
         cout << "\t" << i << "\t" << p << "\t" << p->Prev()
-             << "\t" << p->Next() << "\t";
+             << "\t\t" << p->Next() << "\t";
 
         Base* b = dynamic_cast<Base*>(p);
         if (b)
@@ -64,7 +64,7 @@ int DebugList::menuCase()
 int DebugList::elemNum()
 {
     int pos;
-    cout << "enter element number: ";
+    cout << "\nenter element number: ";
     cin >> pos;
     return pos;
 }
@@ -89,22 +89,24 @@ int main()
         }
 
         case 2:
-        {
-            AnyBaseInt temp;
-
-            temp.Convertation();
-
-            int k;
-            cout << "\ndo you want to save this value? 1. yes 2. no\n";
-            cin >> k;
-
-            if (k == 1)
+		{
+		    AnyBaseInt temp;
+		    temp.AddObjectValue();
+		    
+		    temp.Convertation(); 
+		
+		    int k;
+		    cout << "\ndo you want to save this value?\n1. yes \n2. no\n";
+		    cin >> k;
+		
+		    if (k == 1)
             {
                 Base* p = new AnyBaseInt(temp);
                 L.Add(p);
             }
             break;
-        }
+		}
+
 
         case 3:
         {
@@ -118,7 +120,7 @@ int main()
         case 4:
         {
             int n1, n2;
-            cout << "enter two element numbers: ";
+            cout << "enter two element numbers: \n";
             cin >> n1 >> n2;
 
             Item* i1 = L.GetItem(n1);
@@ -139,14 +141,12 @@ int main()
                 break;
             }
 
-            int res = p1->Compare_objects(*p1, *p2);
-
-            if (res == 1)
+            if (*p1 > *p2)
                 cout << "first > second\n";
-            else if (res == 2)
+            else if (*p1 < *p2)
                 cout << "second > first\n";
             else
-                cout << "equal\n";
+                cout << "objects are equal\n";
 
             break;
         }
@@ -172,6 +172,7 @@ int main()
 
     } while (a != 7);
 
+	getchar();
     return 0;
 }
 
